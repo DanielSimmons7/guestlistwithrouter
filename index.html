@@ -18,13 +18,42 @@
     {
       "imports": {
         "react": "https://esm.sh/react?dev",
-        "react-dom/client": "https://esm.sh/react-dom/client?dev"
+        "react-dom/client": "https://esm.sh/react-dom/client?dev",
+        "react-router-dom": "https://esm.sh/react-router-dom?dev"
       }
     }
   </script>
   <script type="text/babel" data-type="module">
     import React from "react";
+    import {
+      HashRouter,
+      Link,
+      useLocation,
+      Routes,
+      Route,
+      useParams,
+      useNavigate,
+    } from "react-router-dom";
     import { createRoot } from "react-dom/client";
+
+    const Home = () => <hr />;
+
+    const Guest = ({ guests }) => {
+      const { id } = useParams();
+      const guest = guests.find((guest) => guest.id === id * 1);
+      if (!guest) {
+        return null;
+      }
+      return (
+        <div>
+          <h2>Guest Detail</h2>
+          <h3>
+            {guest.name} @ {guest.email} @ {guest.phone}
+          </h3>
+          <Link to="/guests">All Guests</Link>
+        </div>
+      );
+    };
 
     const CreateGuest = ({ createGuest }) => {
       const [name, setName] = React.useState("");
@@ -70,7 +99,7 @@
           {guests.map((guest) => {
             return (
               <li key={guest.id}>
-                {guest.name}{" "}
+                <Link to={`/guests/${guest.id}`}>{guest.name}</Link>{" "}
                 <button onClick={() => destroyGuest(guest)}>Delete</button>
               </li>
             );
@@ -81,6 +110,9 @@
 
     function App() {
       const [guests, setGuests] = React.useState([]);
+      const { pathname } = useLocation();
+      const navigate = useNavigate();
+
       React.useEffect(() => {
         const fetchData = async () => {
           const response = await fetch(
@@ -105,7 +137,7 @@
         );
         const json = await response.json();
         setGuests([...guests, json.data]);
-        console.log(json.data);
+        navigate(`/guests/${json.data.id}`);
       };
 
       const destroyGuest = async (guest) => {
@@ -125,13 +157,44 @@
       return (
         <div>
           <h1>Acme Guest List ({guests.length})</h1>
-          <CreateGuest createGuest={createGuest} />
-          <Guests guests={guests} destroyGuest={destroyGuest} />
+          <nav>
+            <Link to="/" className={pathname === "/" ? "selected" : ""}>
+              Home
+            </Link>
+            <Link
+              to="/guests"
+              className={pathname === "/guests" ? "selected" : ""}
+            >
+              Guests ({guests.length})
+            </Link>
+            <Link
+              to="/createGuest"
+              className={pathname === "/createGuests" ? "selected" : ""}
+            >
+              Create Guest
+            </Link>
+          </nav>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/createGuest"
+              element={<CreateGuest createGuest={createGuest} />}
+            />
+            <Route
+              path="/guests"
+              element={<Guests guests={guests} destroyGuest={destroyGuest} />}
+            />
+            <Route path="/guests/:id" element={<Guest guests={guests} />} />
+          </Routes>
         </div>
       );
     }
 
     const root = createRoot(document.getElementById("root"));
-    root.render(<App />);
+    root.render(
+      <HashRouter>
+        <App />
+      </HashRouter>
+    );
   </script>
 </html>

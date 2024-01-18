@@ -36,7 +36,13 @@
     } from "react-router-dom";
     import { createRoot } from "react-dom/client";
 
-    const Home = () => <hr />;
+    const Home = () => {
+      return (
+        <div>
+          <Link to="/guests">Back to Guests</Link>
+        </div>
+      );
+    };
 
     const Guest = ({ guests }) => {
       const { id } = useParams();
